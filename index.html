@@ -148,6 +148,9 @@
         const text = await response.text();
         const jsonText = text.substring(text.indexOf('{'), text.lastIndexOf('}') + 1);
         return JSON.parse(jsonText).table.rows;
+
+        // Εδώ είναι η διόρθωση: Αφαιρούμε την πρώτη γραμμή (index 0)
+		return allRows.slice(1);
     }
 
     async function loadAllData() {
