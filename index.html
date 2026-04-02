@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Teacher Hub PWA</title>
+    
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#007bff">
+    <link rel="apple-touch-icon" href="icon-192.png">
+
+    <style>
+        :root {
+            --primary: #007bff;
+            --secondary: #28a745;
+            --bg: #f8f9fa;
+            --text: #333;
+        }
+
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; 
+            margin: 0; 
+            background: var(--bg); 
+            color: var(--text);
+            padding-bottom: 70px; /* Χώρος για το κάτω μενού */
+        }
+
+        header { 
+            background: var(--primary); 
+            color: white; 
+            padding: 20px; 
+            text-align: center; 
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        h1 { margin: 0; font-size: 1.5rem; }
+
+        .container { padding: 15px; max-width: 600px; margin: auto; }
+
+        /* Στυλ Κάρτας */
+        .card { 
+            background: white; 
+            padding: 15px; 
+            margin-bottom: 15px; 
+            border-radius: 12px; 
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            border-left: 6px solid var(--primary);
+            transition: transform 0.2s;
+        }
+
+        .card:active { transform: scale(0.98); }
+
+        .card h3 { margin: 0 0 8px 0; color: var(--primary); font-size: 1.1rem; }
+        .card p { margin: 4px 0; font-size: 0.9rem; color: #666; }
+        
+        .badge {
+            display: inline-block;
+            padding: 4px 8px;
+            background: #e9ecef;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            margin-top: 5px;
+        }
+
+        .btn-action {
+            display: block;
+            text-align: center;
+            background: var(--primary);
+            color: white;
+            padding: 10px;
+            text-decoration: none;
+            border-radius: 8px;
+            margin-top: 12px;
+            font-weight: bold;
+        }
+
+        /* Κάτω Μενού Πλοήγησης */
+        nav { 
+            position: fixed; 
+            bottom: 0; 
+            width: 100%; 
+            background: white; 
+            display: flex; 
+            justify-content: space-around; 
+            padding: 12px 0; 
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+        }
+
+        nav button { 
+            border: none; 
+            background: none; 
+            font-size: 0.9rem; 
+            color: #888; 
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        nav button.active { color: var(--primary); font-weight: bold; }
+
+        .hidden { display: none; }
+
+        #loading { text-align: center; margin-top: 50px; color: #888; }
+    </style>
+</head>
+<body>
+
+<header>
+    <h1>Teacher Hub</h1>
+</header>
+
+<div class="container">
+    <div id="loading">Φόρτωση δεδομένων...</div>
+
+    <div id="trainings-section" class="content-section">
+        <h2 style="font-size: 1.2rem;">Πρόγραμμα Επιμορφώσεων</h2>
+        <div id="trainings-list"></div>
+    </div>
+
+    <div id="repository-section" class="content-section hidden">
+        <h2 style="font-size: 1.2rem;">Ψηφιακό Αποθετήριο</h2>
+        <div id="repository-list"></div>
+    </div>
+</div>
+
+<nav>
+    <button onclick="showSection('trainings')" id="btn-trainings" class="active">
+        <span>📅</span>
+        Επιμορφώσεις
+    </button>
+    <button onclick="showSection('repository')" id="btn-repository">
+        <span>📁</span>
+        Υλικό
+    </button>
+</nav>
+
+<script>
+    // --- ΡΥΘΜΙΣΕΙΣ GOOGLE SHEET ---
+    const SHEET_ID = '1ULB21iPkvpApaiDU8WB7EK48oSTlzjGCzQnGZQDgh-M'; // <--- ΒΑΛΕ ΤΟ ID ΣΟΥ ΕΔΩ
+    
+    // URLs για τις δύο καρτέλες
+    const URL_TRAININGS = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=Trainings`;
+    const URL_REPOSITORY = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=Repository`;
+
+	async function fetchData(url) {
+		const response = await fetch(url);
+		const text = await response.text();
+		const jsonText = text.substring(text.indexOf('{'), text.lastIndexOf('}') + 1);
+		const allRows = JSON.parse(jsonText).table.rows;
+    
+		// Εδώ είναι η διόρθωση: Αφαιρούμε την πρώτη γραμμή (index 0)
+		return allRows.slice(1); 
+	}
+
+    async function loadAllData() {
+        try {
+            const [trainRows, repoRows] = await Promise.all([
+                fetchData(URL_TRAININGS),
+                fetchData(URL_REPOSITORY)
+            ]);
+
+            document.getElementById('loading').classList.add('hidden');
+            renderTrainings(trainRows);
+            renderRepository(repoRows);
+        } catch (error) {
+            console.error("Error:", error);
+            document.getElementById('loading').innerHTML = "Σφάλμα φόρτωσης. Ελέγξτε τις ρυθμίσεις κοινής χρήσης του Sheet.";
+        }
+    }
+
+    function renderTrainings(rows) {
+        const list = document.getElementById('trainings-list');
+        list.innerHTML = rows.map(row => {
+            const data = row.c;
+            return `
+                <div class="card">
+                    <h3>${data[0] ? data[0].v : 'Χωρίς Τίτλο'}</h3>
+                    <p>📅 <strong>Ημερομηνία:</strong> ${data[1] ? data[1].v : '-'}</p>
+                    <div class="badge">${data[3] ? data[3].v : 'Γενικό'}</div>
+                    <a href="${data[2] ? data[2].v : '#'}" target="_blank" class="btn-action">Σύνδεσμος Παρακολούθησης</a>
+                </div>
+            `;
+        }).join('');
+    }
+
+    function renderRepository(rows) {
+        const list = document.getElementById('repository-list');
+        list.innerHTML = rows.map(row => {
+            const data = row.c;
+            return `
+                <div class="card" style="border-left-color: var(--secondary);">
+                    <h3>${data[0] ? data[0].v : 'Αρχείο'}</h3>
+                    <p>📄 Τύπος: ${data[1] ? data[1].v : 'PDF'}</p>
+                    <a href="${data[2] ? data[2].v : '#'}" target="_blank" class="btn-action" style="background: var(--secondary);">Λήψη / Προβολή</a>
+                </div>
+            `;
+        }).join('');
+    }
+
+    function showSection(section) {
+        // Toggle Sections
+        document.querySelectorAll('.content-section').forEach(s => s.classList.add('hidden'));
+        document.getElementById(`${section}-section`).classList.remove('hidden');
+
+        // Toggle Buttons
+        document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+        document.getElementById(`btn-${section}`).classList.add('active');
+        
+        // Scroll top
+        window.scrollTo(0,0);
+    }
+
+    // Register Service Worker για PWA
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('sw.js').catch(() => {});
+    }
+
+    // Φόρτωση κατά την εκκίνηση
+    loadAllData();
+</script>
+
+</body>
+</html>
