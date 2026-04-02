@@ -1,0 +1,22 @@
+{
+  "short_name": "TeacherHub",
+  "name": "Teacher Hub: Επιμορφώσεις & Υλικό",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "type": "image/png",
+      "sizes": "192x192"
+    },
+    {
+      "src": "icon-512.png",
+      "type": "image/png",
+      "sizes": "512x512"
+    }
+  ],
+  "start_url": "index.html",
+  "background_color": "#ffffff",
+  "display": "standalone",
+  "scope": "./",
+  "theme_color": "#007bff",
+  "description": "Κεντρικό σημείο αναφοράς και αποθετήριο για εκπαιδευτικούς."
+}
