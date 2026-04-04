@@ -1,0 +1,34 @@
+	function renderRepository(rows) {
+		const list = document.getElementById('repository-list');
+		
+		// 1. Έλεγχος αν υπάρχει το container στο HTML
+		if (!list) {
+			console.error("Το στοιχείο 'repository-list' δεν βρέθηκε στο HTML!");
+			return;
+		}
+
+		// 2. Φιλτράρισμα για να πετάξουμε τις κενές γραμμές (row.c)
+		const validRows = rows.filter(row => row && row.c && row.c[0]);
+
+		if (validRows.length === 0) {
+			list.innerHTML = '<p>Δεν βρέθηκαν αρχεία στο αποθετήριο.</p>';
+			return;
+		}
+
+		list.innerHTML = validRows.map(row => {
+			const data = row.c;
+			
+			// Χρήση Optional Chaining (?.) για μέγιστη ασφάλεια
+			const title = data[0]?.v || 'Αρχείο χωρίς τίτλο';
+			const type  = data[1]?.v || 'PDF';
+			const link  = data[2]?.v || '#';
+
+			return ('
+			<div class="card" style="border-left-color: var(--secondary);"> 
+			<h3>${title}</h3> 
+			<p>📄 Τύπος: ${type}</p> 
+			<a href="${link}" target="_blank" class="btn-action" style="background: var(--secondary);">Λήψη / Προβολή</a> 
+			</div>
+			');
+		}).join('');
+	}
