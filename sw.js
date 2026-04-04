@@ -1,4 +1,11 @@
-self.addEventListener('fetch', function(event) {
-    // Αυτό επιτρέπει στην εφαρμογή να "τρέχει" ακόμα και χωρίς ίντερνετ 
-    // αν έχει φορτώσει τα δεδομένα μια φορά.
+self.addEventListener('install', (event) => {
+  self.skipWaiting();
+});
+
+self.addEventListener('activate', (event) => {
+  event.waitUntil(clients.claim());
+});
+
+self.addEventListener('fetch', (event) => {
+  // Απαραίτητο για να θεωρηθεί έγκυρο PWA
 });
