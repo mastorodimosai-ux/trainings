@@ -167,14 +167,15 @@
 			// --- ΚΩΔΙΚΑΣ ΓΙΑ ΑΥΤΟΜΑΤΗ ΕΙΔΟΠΟΙΗΣΗ (BADGE) ---
 			// Αν υπάρχουν μελλοντικές επιμορφώσεις, εμφάνισε έναν αριθμό στο εικονίδιο
 			if ('setAppBadge' in navigator) {
-				const count = trainRows.length - 1; // Αφαιρούμε την πρώτη γραμμή τίτλων
+				navigator.setAppBadge(5);
+				/*const count = trainRows.length - 1; // Αφαιρούμε την πρώτη γραμμή τίτλων
 				if (count > 0) {
 					navigator.setAppBadge(count).catch((error) => {
 						console.error("Badge error:", error);
 					});
 				} else {
                 navigator.clearAppBadge(); // Αν δεν έχει τίποτα, καθάρισε το εικονίδιο
-				}
+				}*/
 			}
 			// ----------------------------------------------
 
